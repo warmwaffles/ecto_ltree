@@ -13,16 +13,16 @@ jobs:
     name: Lint
     strategy:
       matrix:
-        os: ["ubuntu-20.04"]
-        elixir: ["1.13"]
-        otp: ["24"]
+        os: ["ubuntu-latest"]
+        elixir: ["1.18"]
+        otp: ["27"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp }}
           elixir-version: ${{ matrix.elixir }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: deps
           key: ${{ matrix.os }}-otp_${{ matrix.otp }}-elixir_${{ matrix.elixir }}-mix_${{ hashFiles('**/mix.lock') }}
@@ -33,7 +33,7 @@ jobs:
       - run: mix deps.unlock --check-unused
       - run: mix credo --strict --all
       - name: Cache dialyzer
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: priv/plts
           key: plts-otp_${{ matrix.otp }}-elixir_${{ matrix.elixir }}
@@ -47,10 +47,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-20.04"]
-        elixir: ["1.13", "1.12", "1.11"]
-        otp: ["24", "23", "22"]
-        pg: ["10", "11", "12"]
+        os: ["ubuntu-latest"]
+        elixir: ["1.18", "1.17", "1.16", "1.15"]
+        otp: ["27", "26", "25"]
+        pg: ["17", "16", "15", "14"]
+        exclude:
+          - elixir: "1.15"
+            otp: "27"
+          - elixir: "1.16"
+            otp: "27"
     services:
       pg:
         image: postgres:${{ matrix.pg }}
@@ -61,12 +66,12 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         ports: ["5432:5432"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.otp }}
           elixir-version: ${{ matrix.elixir }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: deps
           key: ${{ matrix.os }}-otp_${{ matrix.otp }}-elixir_${{ matrix.elixir }}-mix_${{ hashFiles('**/mix.lock') }}
